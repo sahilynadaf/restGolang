@@ -24,6 +24,7 @@ func main() {
 	router.GET("/todos", getTodos)
 	router.POST("/todos", addTodo)
 	router.GET("/todos/:id", getTodo)
+	router.PATCH("/todos/:id", toggleTodoStatus)
 	router.Run("localhost:9090")
 }
 
@@ -43,16 +44,6 @@ func addTodo(context *gin.Context) {
 	context.IndentedJSON(http.StatusCreated, newTodo)
 }
 
-func getTodoByID(id string) (*todo, error) {
-	for i, t := range todos {
-		if t.ID == id {
-			return &todos[i], nil
-		}
-	}
-
-	return nil, errors.New("todo not found")
-}
-
 func getTodo(context *gin.Context) {
 	id := context.Param("id")
 
@@ -64,4 +55,29 @@ func getTodo(context *gin.Context) {
 	}
 
 	context.IndentedJSON(http.StatusOK, todo)
+}
+
+func toggleTodoStatus(context *gin.Context) {
+	id := context.Param("id")
+
+	todo, err := getTodoByID(id)
+
+	if err != nil {
+		context.IndentedJSON(http.StatusNotFound, gin.H{"message": "Todo Not Found"})
+		return
+	}
+
+	todo.Completed = !todo.Completed
+
+	context.IndentedJSON(http.StatusOK, todo)
+}
+
+func getTodoByID(id string) (*todo, error) {
+	for i, t := range todos {
+		if t.ID == id {
+			return &todos[i], nil
+		}
+	}
+
+	return nil, errors.New("todo not found")
 }
